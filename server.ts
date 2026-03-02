@@ -204,21 +204,36 @@ io.on('connection', (socket) => {
         room.status = 'punishments';
         broadcastRoomState(roomId);
       } else {
-        room.status = 'transition';
-        broadcastRoomState(roomId);
-        setTimeout(() => {
-          if (rooms.has(roomId)) {
-            const r = rooms.get(roomId)!;
-            r.status = 'question';
-            r.timer = 30;
-            r.players.forEach(p => {
-              p.hasAnswered = false;
-              p.lastAnswerCorrect = null;
-            });
-            broadcastRoomState(roomId);
-            startTimer(roomId);
-          }
-        }, 3000);
+        // Show transition only at start of Medium (index 5) or Hard (index 10)
+        const isNewRound = room.currentQuestionIndex === 5 || room.currentQuestionIndex === 10;
+        
+        if (isNewRound) {
+          room.status = 'transition';
+          broadcastRoomState(roomId);
+          setTimeout(() => {
+            if (rooms.has(roomId)) {
+              const r = rooms.get(roomId)!;
+              r.status = 'question';
+              r.timer = 30;
+              r.players.forEach(p => {
+                p.hasAnswered = false;
+                p.lastAnswerCorrect = null;
+              });
+              broadcastRoomState(roomId);
+              startTimer(roomId);
+            }
+          }, 3000);
+        } else {
+          // Go directly to next question
+          room.status = 'question';
+          room.timer = 30;
+          room.players.forEach(p => {
+            p.hasAnswered = false;
+            p.lastAnswerCorrect = null;
+          });
+          broadcastRoomState(roomId);
+          startTimer(roomId);
+        }
       }
     }
   });
