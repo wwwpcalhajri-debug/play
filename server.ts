@@ -109,7 +109,8 @@ io.on('connection', (socket) => {
         isOpen: false,
         openedBy: null
       })),
-      currentPunishmentPlayerIndex: 0
+      currentPunishmentPlayerIndex: 0,
+      currentPlayerPunishmentsPicked: 0
     };
 
     rooms.set(roomId, room);
@@ -226,6 +227,18 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomId);
     if (room && room.hostId === socket.id) {
       room.status = 'punishments';
+      
+      // Initialize punishment turn properly (skip 0 errors)
+      const sortedPlayers = [...room.players].sort((a, b) => b.errors - a.errors);
+      room.currentPunishmentPlayerIndex = 0;
+      room.currentPlayerPunishmentsPicked = 0;
+      while (
+        room.currentPunishmentPlayerIndex < sortedPlayers.length && 
+        sortedPlayers[room.currentPunishmentPlayerIndex].errors === 0
+      ) {
+        room.currentPunishmentPlayerIndex++;
+      }
+      
       broadcastRoomState(roomId);
     }
   });
@@ -248,7 +261,24 @@ io.on('connection', (socket) => {
       const punishment = room.punishments.find(p => p.id === punishmentId);
       if (punishment && punishment.isOpen && punishment.openedBy === socket.id) {
         punishment.isOpen = false;
-        room.currentPunishmentPlayerIndex++;
+        room.currentPlayerPunishmentsPicked++;
+        
+        const sortedPlayers = [...room.players].sort((a, b) => b.errors - a.errors);
+        const currentPlayer = sortedPlayers[room.currentPunishmentPlayerIndex];
+        
+        if (currentPlayer && room.currentPlayerPunishmentsPicked >= currentPlayer.errors) {
+          room.currentPunishmentPlayerIndex++;
+          room.currentPlayerPunishmentsPicked = 0;
+          
+          // Skip players with 0 errors
+          while (
+            room.currentPunishmentPlayerIndex < sortedPlayers.length && 
+            sortedPlayers[room.currentPunishmentPlayerIndex].errors === 0
+          ) {
+            room.currentPunishmentPlayerIndex++;
+          }
+        }
+        
         broadcastRoomState(roomId);
       }
     }
@@ -257,16 +287,22 @@ io.on('connection', (socket) => {
   socket.on('shuffle_punishments', (roomId) => {
     const room = rooms.get(roomId);
     if (room && room.hostId === socket.id) {
-      // Shuffle the texts of unopened punishments
-      const unopened = room.punishments.filter(p => !p.openedBy);
-      const texts = unopened.map(p => p.text);
+      // Reset all punishments to closed and unassigned
+      room.punishments.forEach(p => {
+        p.isOpen = false;
+        p.openedBy = null;
+      });
+      
+      // Shuffle texts
+      const texts = room.punishments.map(p => p.text);
       for (let i = texts.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [texts[i], texts[j]] = [texts[j], texts[i]];
       }
-      unopened.forEach((p, i) => {
+      room.punishments.forEach((p, i) => {
         p.text = texts[i];
       });
+      
       broadcastRoomState(roomId);
     }
   });
@@ -325,7 +361,6 @@ function endQuestion(roomId: string) {
   }
   const room = rooms.get(roomId);
   if (room) {
-    room.status = 'leaderboard';
     // Mark unanswered as errors
     room.players.forEach(p => {
       if (!p.hasAnswered) {
@@ -334,6 +369,14 @@ function endQuestion(roomId: string) {
         p.errors += 1;
       }
     });
+
+    // Only go to leaderboard if it's the last question
+    if (room.currentQuestionIndex >= 14) {
+      room.status = 'leaderboard';
+    } else {
+      // Stay on 'question' screen so host can click "Next Question"
+    }
+    
     broadcastRoomState(roomId);
   }
 }

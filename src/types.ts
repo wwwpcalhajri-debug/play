@@ -27,4 +27,5 @@ export type Room = {
   timer: number;
   punishments: Punishment[];
   currentPunishmentPlayerIndex: number;
+  currentPlayerPunishmentsPicked: number;
 };

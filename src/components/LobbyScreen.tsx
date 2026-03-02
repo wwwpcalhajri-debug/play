@@ -50,29 +50,29 @@ export function LobbyScreen() {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
             {room.players.map((player) => (
               <motion.div
                 key={player.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`bg-white/5 border ${player.id === socket.id ? 'border-yellow-500/50 bg-yellow-500/10' : 'border-white/10'} rounded-2xl p-4 flex flex-col items-center justify-center gap-2 relative overflow-hidden`}
+                className={`bg-white/5 border ${player.id === socket.id ? 'border-yellow-500/50 bg-yellow-500/10' : 'border-white/10'} rounded-xl p-2 flex flex-col items-center justify-center gap-1 relative overflow-hidden`}
               >
                 {player.isHost && (
-                  <div className="absolute top-2 right-2 text-xs bg-yellow-500 text-slate-900 px-2 py-0.5 rounded-full font-bold">
+                  <div className="absolute top-1 right-1 text-[10px] bg-yellow-500 text-slate-900 px-1.5 py-0.5 rounded-full font-bold">
                     مضيف
                   </div>
                 )}
-                <span className="text-4xl drop-shadow-lg">{player.emoji}</span>
-                <span className="font-bold text-white truncate w-full text-center">{player.name}</span>
+                <span className="text-3xl drop-shadow-lg">{player.emoji}</span>
+                <span className="font-bold text-white truncate w-full text-center text-xs">{player.name}</span>
               </motion.div>
             ))}
             
-            {/* Empty slots */}
-            {Array.from({ length: Math.max(0, 4 - room.players.length) }).map((_, i) => (
-              <div key={`empty-${i}`} className="bg-black/20 border border-white/5 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center gap-2 opacity-50">
-                <span className="text-4xl grayscale opacity-20">👤</span>
-                <span className="font-medium text-blue-200/50 text-sm">في انتظار لاعب...</span>
+            {/* Empty slots up to exactly 10 */}
+            {Array.from({ length: Math.max(0, 10 - room.players.length) }).map((_, i) => (
+              <div key={`empty-${i}`} className="bg-black/20 border border-white/5 border-dashed rounded-xl p-2 flex flex-col items-center justify-center gap-1 opacity-50">
+                <span className="text-3xl grayscale opacity-20">👤</span>
+                <span className="font-medium text-blue-200/50 text-[10px] text-center">في انتظار اللاعبين</span>
               </div>
             ))}
           </div>

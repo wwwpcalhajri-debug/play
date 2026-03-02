@@ -68,6 +68,9 @@ export function PunishmentsScreen() {
               <span className="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm font-bold border border-red-500/50">
                 {currentPlayer?.errors} أخطاء
               </span>
+              <span className="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-sm font-bold border border-yellow-500/50">
+                اختار: {room.currentPlayerPunishmentsPicked} / {currentPlayer?.errors}
+              </span>
             </div>
             {isMyTurn ? (
               <p className="text-green-400 mt-4 font-bold animate-pulse">اختر مربعاً لعقوبتك!</p>
