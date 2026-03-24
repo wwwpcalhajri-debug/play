@@ -1,5 +1,5 @@
 {
-  "name": "",
-  "description": "",
+  "name": "CineVerse",
+  "description": "A premium movie streaming dashboard with TMDB integration, dual-language support, and a cinematic dark theme.",
   "requestFramePermissions": []
 }
